@@ -27,6 +27,10 @@ public class Customer {
         this.creditScore = creditScore;
     }
 
+    public Customer() {
+
+    }
+
     public String getName() {
         return name;
     }

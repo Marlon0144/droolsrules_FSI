@@ -2,15 +2,14 @@ package com.udea.droolrules.controller;
 
 import com.udea.droolrules.model.CreditRequest;
 import com.udea.droolrules.model.CreditResponse;
+import com.udea.droolrules.model.Customer;
 import com.udea.droolrules.service.CreditEvaluationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/credit")
@@ -33,5 +32,26 @@ public class CreditEvaluationController {
         return evaluationService.evaluateCredit(request);
     }
 
+
+    //Mostrar el formulario web
+    @GetMapping("/form")
+    public String showCreditForm(Model model) {
+        CreditRequest creditRequest = new CreditRequest();
+        creditRequest.setCustomer(new Customer());
+        model.addAttribute("creditRequest", creditRequest);
+        return "credit_form";
+    }
+
+
+//Procesar la solicitud desde el formulario web
+    @PostMapping("/evaluate")
+    public String evaluateCreditWeb(@Valid CreditRequest creditRequest, BindingResult result, Model model) {
+        if(result.hasErrors()){
+            return "credit_form";
+        }
+        CreditResponse creditResponse = evaluationService.evaluateCredit(creditRequest);
+        model.addAttribute("creditResponse", creditResponse);
+        return "credit_result";
+    }
 
 }
