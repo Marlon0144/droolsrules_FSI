@@ -1,0 +1,141 @@
+package rules;
+
+import com.udea.droolrules.model.*;
+
+// ============================================================
+// Regla 1: Upgrade a Clase Ejecutiva para Viajeros Frecuentes
+//           con Retrasos significativos
+// ============================================================
+rule "UpgradeToBusinessClassForFrequentFlyersWithDelays"
+    when
+        $passenger : Passenger(membership == "Gold" || membership == "Platinum")
+        $flight    : Flight(delayMinutes > 60)
+        $response  : AirlineResponse()
+    then
+        $response.setUpgradeToBusiness(true);
+        $response.getMessages().add("Regla 1 aplicada: Upgrade a clase ejecutiva por retraso > 60 min y membresía " + $passenger.getMembership() + ".");
+        update($response);
+end
+
+// ============================================================
+// Regla 2: Check-In Prioritario para Adultos Mayores
+// ============================================================
+rule "PriorityCheckInForSeniors"
+    when
+        $passenger : Passenger(age > 65)
+        $response  : AirlineResponse()
+    then
+        $response.setPriorityCheckIn(true);
+        $response.getMessages().add("Regla 2 aplicada: Check-in prioritario otorgado por edad > 65 años (" + $passenger.getAge() + " años).");
+        update($response);
+end
+
+// ============================================================
+// Regla 3: Descuento por Equipaje Ligero
+// ============================================================
+rule "DiscountForLightLuggage"
+    when
+        $request  : AirlineRequest(luggageWeightKg < 10.0)
+        $response : AirlineResponse()
+    then
+        $response.setDiscount(0.10);
+        $response.getMessages().add("Regla 3 aplicada: Descuento del 10% aplicado por equipaje ligero (" + $request.getLuggageWeightKg() + " kg).");
+        update($response);
+end
+
+// ============================================================
+// Regla 4: Denegar Upgrade por Exceso de Equipaje
+// ============================================================
+rule "DenyUpgradeForOverweightLuggage"
+    when
+        $request  : AirlineRequest(luggageWeightKg > 23.0)
+        $response : AirlineResponse()
+    then
+        $response.setEligibleForUpgrade(false);
+        $response.getMessages().add("Regla 4 aplicada: Upgrade denegado por exceso de equipaje (" + $request.getLuggageWeightKg() + " kg > 23 kg).");
+        update($response);
+end
+
+// ============================================================
+// Regla 5: Asignar Asiento de Salida de Emergencia a
+//           Adultos Jóvenes
+// ============================================================
+rule "AssignEmergencyExitSeatToYoungAdults"
+    when
+        $passenger : Passenger(age >= 18 && age <= 40, seatPreference == "Any")
+        $flight    : Flight(emergencySeatAvailable == true)
+        $response  : AirlineResponse()
+    then
+        $response.setAssignedSeat("Emergency Exit");
+        $response.getMessages().add("Regla 5 aplicada: Asiento de salida de emergencia asignado al pasajero (" + $passenger.getAge() + " años).");
+        $flight.setEmergencySeatAvailable(false);
+        update($flight);
+        update($response);
+end
+
+// ============================================================
+// Regla 6: Compensación Económica por Retrasos Extremos
+// ============================================================
+rule "CompensationForExtremeDelays"
+    when
+        $flight   : Flight(delayMinutes > 180)
+        $response : AirlineResponse()
+    then
+        $response.setCompensation(200.0);
+        $response.getMessages().add("Regla 6 aplicada: Compensación de $200 USD otorgada por retraso extremo (" + $flight.getDelayMinutes() + " min).");
+        update($response);
+end
+
+// ============================================================
+// Regla 7: Puntos de Fidelidad Extra en Vuelos Largos
+// ============================================================
+rule "ExtraLoyaltyPointsForLongFlights"
+    when
+        $passenger : Passenger(membership != "Basic")
+        $flight    : Flight(durationHours > 5.0)
+        $response  : AirlineResponse()
+    then
+        $response.setLoyaltyPoints(500);
+        $response.getMessages().add("Regla 7 aplicada: 500 puntos de fidelidad otorgados por vuelo > 5 h y membresía " + $passenger.getMembership() + ".");
+        update($response);
+end
+
+// ============================================================
+// Regla 8: Restricción de Equipaje en Vuelos Cortos
+// ============================================================
+rule "RestrictLuggageOnShortFlights"
+    when
+        $request  : AirlineRequest(luggageWeightKg > 15.0)
+        $flight   : Flight(durationHours < 2.0)
+        $response : AirlineResponse()
+    then
+        $response.setLuggageAllowed(false);
+        $response.getMessages().add("Regla 8 aplicada: Equipaje no permitido — vuelo corto (< 2 h) con peso > 15 kg (" + $request.getLuggageWeightKg() + " kg).");
+        update($response);
+end
+
+// ============================================================
+// Regla 9: Acceso a Sala VIP para Miembros Platinum
+// ============================================================
+rule "VipLoungeAccessForPlatinumMembers"
+    when
+        $passenger : Passenger(membership == "Platinum")
+        $response  : AirlineResponse()
+    then
+        $response.setVipLoungeAccess(true);
+        $response.getMessages().add("Regla 9 aplicada: Acceso a sala VIP otorgado por membresía Platinum.");
+        update($response);
+end
+
+// ============================================================
+// Regla 10: Asiento Preferencial para Familias con Niños
+// ============================================================
+rule "PreferentialSeatForFamilies"
+    when
+        $passenger : Passenger(travelingWithChildren == true, seatPreference == "Any")
+        $response  : AirlineResponse()
+    then
+        $response.setAssignedSeat("Preferential Family Seat");
+        $response.getMessages().add("Regla 10 aplicada: Asiento familiar preferencial asignado por viaje con menores.");
+        update($response);
+end
